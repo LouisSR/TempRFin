@@ -1,0 +1,12 @@
+Output: NC Drill Files
+Type  : NC Drill
+From  : Project [TempRFIn.PrjPcb]
+   Generated File[TempRFIn.TXT]
+   Generated File[TempRFIn.LDP]
+   Generated File[TempRFIn.DRR]
+
+
+Files Generated   : 3
+Documents Printed : 0
+
+Finished Output Generation At 18:17:14 On 04.02.2026
