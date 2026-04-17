@@ -8,6 +8,9 @@
 using namespace SAMD21LPE;
 
 #include <SPI.h>
+#include <RH_RF69.h> //RadioHead - modified RH_RF69.cpp line 182: disable CLKOUT to minimize the current consumption (see 3.2.2)
+
+#include "Adafruit_SHT4x.h"
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_SharpMem.h> //modified to avoid redraw unchanged lines - see refresh(bool* lines)
@@ -18,17 +21,30 @@ using namespace SAMD21LPE;
 #include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/FreeSans9pt7b.h>
 
+//pinout
+#define BATTERY_VOLTAGE A7
+#define ANALOG_ENABLE 12
+#define LUMINOSITY A1
+#define LUMINOSITY_ENABLE A2
+
+#define RF_CS 8
+#define RF_RST 4
+#define RF_IRQ 3
+
 //Display
-#define SHARP_SS   2
+#define SHARP_SS   A5
 #define SHARP_WIDTH 400
 #define SHARP_HEIGHT 240
 #define BLACK 0
 #define WHITE 1
 
-#define DEBUG
+//#define DEBUG
 //#define DEBUG_DISPLAY
 
 Adafruit_SharpMem display(&SPI, SHARP_SS, SHARP_WIDTH, SHARP_HEIGHT, 4000000);
+RH_RF69 rf69(RF_CS, RF_IRQ); // Singleton instance of the radio driver
+Adafruit_SHT4x sht4 = Adafruit_SHT4x();
+
 bool lines[SHARP_HEIGHT];
 TimerCounter timer;
 unsigned long toc1, toc2, toc3, toc4, toc5;
@@ -37,7 +53,21 @@ unsigned long toc1, toc2, toc3, toc4, toc5;
 void setup()
 {
 	pinMode(LED_BUILTIN, OUTPUT);
+	pinMode(LED_BUILTIN, OUTPUT);
 	digitalWrite(LED_BUILTIN, HIGH);
+	pinMode(RF_RST, OUTPUT);
+	pinMode(ANALOG_ENABLE, OUTPUT);
+	pinMode(LUMINOSITY_ENABLE, OUTPUT);
+
+	digitalWrite(LED_BUILTIN, HIGH);
+
+	rf69.init();
+	rf69.sleep();
+
+	sht4.begin();
+	sht4.setPrecision(SHT4X_LOW_PRECISION);
+	sht4.setHeater(SHT4X_NO_HEATER);
+
 	delay(5000);
 
 #ifndef DEBUG
@@ -80,13 +110,15 @@ void loop()
 {
 	digitalWrite(LED_BUILTIN, HIGH);
 	
+	int luminosity = 0; //analogRead(LUMINOSITY);
+
 	static int battery_voltage = 30;
 	static int temp_in = 0;
 	static int temp_out = -10;
 	static int humidity = 0;
 
 	toc1 = millis();
-	display_data(battery_voltage, temp_in, humidity, battery_voltage, temp_out, humidity, -60, 100, 350, 1, 1200);
+	display_data(battery_voltage, temp_in, humidity, battery_voltage, temp_out, humidity, -60, 100, luminosity, 1, 1200);
 	toc3 = millis();
 	Serial.print(toc2-toc1);Serial.println("ms");
 	Serial.print(toc3-toc2);Serial.println("ms");
