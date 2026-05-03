@@ -19,7 +19,8 @@ Adafruit_SharpMem display(&SPI, SHARP_SS, SHARP_WIDTH, SHARP_HEIGHT, 4000000);
 
 bool lines[SHARP_HEIGHT];
 
-void display_data(int batt_in, int temp_in, int humidity_in, int batt_out, int temp_out, int humidity_out, int rssi, int packet_loss_rate, int luminosity, int message_id, int waited_time);
+void display_sleep(void);
+void display_data(int batt_in, int temp_in, int humidity_in, int luminosity, int batt_out, int temp_out, int humidity_out, int rssi, int message_id, int rf_sync, int waited_time);
 void display_temperature(unsigned int pos_x, unsigned int pos_y, int decitemp);
 void display_humidity(unsigned int pos_x, unsigned int pos_y, unsigned int humidity);
 void display_drawBattery(unsigned int pos_x, unsigned int pos_y, unsigned int decivolt);
@@ -38,7 +39,21 @@ void display_setup()
 	display_welcome();
 }
 
-void display_data(int batt_in, int temp_in, int humidity_in, int batt_out, int temp_out, int humidity_out, int rssi, int packet_loss_rate, int luminosity, int message_id, int waited_time)
+#define SLEEP_X 130
+#define SLEEP_Y 134 
+void display_sleep(void)
+{
+	display.clearDisplayBuffer();
+	display.setRotation(0);
+	display.setTextColor(BLACK);
+	display.setFont(&FreeSans24pt7b);
+	display.setCursor(SLEEP_X, SLEEP_Y);
+	display.print("SLEEP");
+	display_setAllLines(lines);
+	display.refresh(lines); 
+}
+
+void display_data(int batt_in, int temp_in, int humidity_in, int luminosity, int batt_out, int temp_out, int humidity_out, int rssi, int message_id, int rf_sync, int waited_time)
 {
 	bool connected = true; 
 	humidity_in = min(humidity_in, 99);
@@ -102,7 +117,15 @@ void display_data(int batt_in, int temp_in, int humidity_in, int batt_out, int t
 		display.setTextColor(BLACK);
 		display.setFont(&FreeSans12pt7b);
 		display.setCursor(255, TEMP_OUT_Y-20);
-		display.print("no signal");
+		if(rf_sync)
+		{
+			display.print("SYNC...");
+		}
+		else
+		{
+			display.print("no signal");
+		}
+
 	}
 	
 	if(connected)
