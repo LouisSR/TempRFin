@@ -253,7 +253,7 @@ bool isDark(int luminosity)
 	if(luminosity < 100) dark++;
 	else dark = 0;
 
-	if(dark > 10) //200 ~ 1h
+	if(dark > 200) //200 ~ 1h
 	{
 		dark = 200;
 		return true;
